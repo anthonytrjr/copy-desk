@@ -198,3 +198,30 @@ canvas {
   text-decoration: underline;
   padding: 8px;
 }
+
+.fomo-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fomo-link:hover,
+.fomo-link:focus {
+  text-decoration: underline;
+}
+
+.list-item {
+  flex-wrap: wrap;
+}
+
+.list-item .fomo-link {
+  font-size: 12px;
+}
+
+.footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}

@@ -19,6 +19,8 @@ const stateEl = {
   dataUrlInput: document.getElementById("dataUrlInput"),
   saveBtn: document.getElementById("saveDataUrl"),
   changeBtn: document.getElementById("changeDataUrl"),
+  signupLink: document.getElementById("signupLink"),
+  fomoLinks: document.getElementById("fomoLinks"),
   setupError: document.getElementById("setupError"),
   stubNote: document.getElementById("stubNote"),
   modeBadge: document.getElementById("modeBadge"),
@@ -93,6 +95,22 @@ function fmtTime(iso) {
   } catch {
     return iso;
   }
+}
+
+function isHttpsUrl(value) {
+  return typeof value === "string" && /^https:\/\//i.test(value);
+}
+
+// Render a URL the desk already built. Never compose a fomo.family link here.
+function fomoAnchor(url, label) {
+  if (!isHttpsUrl(url)) return "";
+  const a = document.createElement("a");
+  a.className = "fomo-link";
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.textContent = label || "Open on FOMO";
+  return a.outerHTML;
 }
 
 async function parseSnapshot(res) {
@@ -194,7 +212,7 @@ function render(snap) {
   stateEl.balance.textContent = `$${Number(state.balance_usd || 0).toFixed(2)}`;
   const sourceLabel = snap.stub ? "stub" : (snap.source || "snapshot");
   stateEl.updated.textContent = `Updated ${fmtTime(snap.updated_at || state.updated_at)} · ${sourceLabel}`;
-  window.drawBalanceChart(stateEl.chart, state.balance_history || [], state.starting_usd || 1000);
+  window.drawBalanceChart(stateEl.chart, state.balance_history || [], state.starting_usd || 36);
 
   setScreen(snap.screen_svg, snap.screen_url);
 
@@ -205,23 +223,23 @@ function render(snap) {
   const whales = snap.whales || {};
   const whaleRows = whales.whales || [];
   stateEl.whales.innerHTML = whaleRows.length
-    ? whaleRows.map((w) => `<div class="list-item"><span>@${w.handle || w.user_id}</span><span>#${w.rank ?? "-"}</span></div>`).join("")
+    ? whaleRows.map((w) => `<div class="list-item"><span>@${w.handle || w.user_id} ${fomoAnchor(w.profile_url, "Profile")}</span><span>#${w.rank ?? "-"}</span></div>`).join("")
     : `<div class="muted">${whales.note || "No whales tracked yet."}</div>`;
 
   const posRows = state.open_positions || [];
   stateEl.positions.innerHTML = posRows.length
-    ? posRows.map((p) => `<div class="list-item"><span>${p.mint}</span><span>$${Number(p.size_usd || 0).toFixed(2)}</span></div>`).join("")
+    ? posRows.map((p) => `<div class="list-item"><span>${p.mint} ${fomoAnchor(p.coin_url || p.link, "Open on FOMO")}</span><span>$${Number(p.size_usd || 0).toFixed(2)}</span></div>`).join("")
     : `<div class="muted">No open paper positions.</div>`;
 
   const actRows = (snap.activity && snap.activity.items) || [];
   stateEl.activity.innerHTML = actRows.length
-    ? actRows.map((a) => `<div class="list-item"><span>${a.title || a.kind}</span><span>${a.value || ""}</span></div>`).join("")
+    ? actRows.map((a) => `<div class="list-item"><span>${a.title || a.kind} ${fomoAnchor(a.coin_url || a.link, "Open on FOMO")}</span><span>${a.value || ""}</span></div>`).join("")
     : `<div class="muted">No activity yet.</div>`;
 
   const candRows = snap.candidates || (snap.state && snap.state.candidates) || [];
   if (stateEl.candidates) {
     stateEl.candidates.innerHTML = candRows.length
-      ? candRows.map((c) => `<div class="list-item"><span>${(c.mint || "").slice(0, 8)}… · ${c.trader_count || 0} traders</span><span>${c.buy_count || 0} buys</span></div>`).join("")
+      ? candRows.map((c) => `<div class="list-item"><span>${(c.mint || "").slice(0, 8)}… · ${c.trader_count || 0} traders ${fomoAnchor(c.coin_url || c.link, "Open on FOMO")}</span><span>${c.buy_count || 0} buys</span></div>`).join("")
       : `<div class="muted">No candidates yet. Watcher waits for the browser lane (Step 9) or a labeled fixture feed.</div>`;
   }
   const verdicts = snap.verdicts || (snap.state && snap.state.verdicts) || [];
@@ -229,14 +247,14 @@ function render(snap) {
     stateEl.verdicts.innerHTML = verdicts.length
       ? verdicts.map((v) => {
           const audits = (v.audits || []).map((a) => `${a.pass ? "✓" : "✗"} ${a.name}`).join(" · ");
-          return `<div class="list-item"><span>${v.pass ? "PASS" : "FAIL"} · ${(v.mint || "").slice(0, 8)}… · ${v.reason || ""}</span><span>${audits}</span></div>`;
+          return `<div class="list-item"><span>${v.pass ? "PASS" : "FAIL"} · ${(v.mint || "").slice(0, 8)}… · ${v.reason || ""} ${fomoAnchor(v.coin_url || v.link, "Open on FOMO")}</span><span>${audits}</span></div>`;
         }).join("")
       : `<div class="muted">No Vetter verdicts yet.</div>`;
   }
   const alerts = snap.alerts || (snap.state && snap.state.alerts) || [];
   if (stateEl.alerts) {
     stateEl.alerts.innerHTML = alerts.length
-      ? alerts.map((a) => `<div class="list-item"><span>${a.level || "info"} · ${a.title || ""}</span><span>${a.reason || ""}</span></div>`).join("")
+      ? alerts.map((a) => `<div class="list-item"><span>${a.level || "info"} · ${a.title || ""} ${fomoAnchor(a.coin_url || a.link, "Open on FOMO")}</span><span>${a.reason || ""}</span></div>`).join("")
       : `<div class="muted">No Guard alerts.</div>`;
   }
   const sol = snap.sol_benchmark || (snap.state && snap.state.sol_benchmark) || {};
@@ -247,6 +265,31 @@ function render(snap) {
       stateEl.solBench.textContent = `Paper $${Number(sol.paper_equity_usd || 0).toFixed(2)} vs holding SOL $${Number(sol.sol_hold_usd || 0).toFixed(2)} (${sign}${vs.toFixed(2)})`;
     } else {
       stateEl.solBench.textContent = "P&L vs holding SOL: waiting for a SOL price (not invented).";
+    }
+  }
+
+  const signup = snap.signup_url || state.signup_url;
+  const profile = snap.fomo_profile_url || state.fomo_profile_url;
+  const watch = snap.watch_list || state.watch_list || [];
+  if (stateEl.fomoLinks) {
+    const bits = [];
+    if (isHttpsUrl(signup)) bits.push(`<div class="list-item"><span>Invite a friend</span>${fomoAnchor(signup, "New to FOMO?")}</div>`);
+    if (isHttpsUrl(profile)) bits.push(`<div class="list-item"><span>Your FOMO profile</span>${fomoAnchor(profile, "Profile")}</div>`);
+    watch.forEach((w) => {
+      if (isHttpsUrl(w.profile_url)) {
+        bits.push(`<div class="list-item"><span>@${w.handle || w.user_id}</span>${fomoAnchor(w.profile_url, "Profile")}</div>`);
+      }
+    });
+    stateEl.fomoLinks.innerHTML = bits.join("") || `<div class="muted">Links appear here once the snapshot includes them.</div>`;
+  }
+  if (stateEl.signupLink) {
+    if (isHttpsUrl(signup)) {
+      stateEl.signupLink.href = signup;
+      stateEl.signupLink.textContent = "New to FOMO?";
+      stateEl.signupLink.classList.remove("hidden");
+    } else {
+      stateEl.signupLink.classList.add("hidden");
+      stateEl.signupLink.removeAttribute("href");
     }
   }
 }

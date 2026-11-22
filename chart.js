@@ -13,7 +13,7 @@ window.drawBalanceChart = function drawBalanceChart(canvas, history, baselineUsd
 
   const pts = (history && history.length > 0)
     ? history.map((p) => Number(p.value))
-    : [Number(baselineUsd || 1000), Number(baselineUsd || 1000)];
+    : [Number(baselineUsd || 36), Number(baselineUsd || 36)];
 
   const minV = Math.min(...pts) * 0.995;
   const maxV = Math.max(...pts) * 1.005;
@@ -41,5 +41,5 @@ window.drawBalanceChart = function drawBalanceChart(canvas, history, baselineUsd
 
   ctx.fillStyle = "#8b949e";
   ctx.font = "11px monospace";
-  ctx.fillText(`PAPER baseline $${Number(baselineUsd || 1000).toFixed(2)}`, 8, 16);
+  ctx.fillText(`PAPER baseline $${Number(baselineUsd || 36).toFixed(2)}`, 8, 16);
 };

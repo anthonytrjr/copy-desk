@@ -1,4 +1,4 @@
-const CACHE_NAME = "fomo-copy-desk-v3";
+const CACHE_NAME = "fomo-copy-desk-v4";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

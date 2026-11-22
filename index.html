@@ -32,7 +32,7 @@
     <section class="card">
       <h2>Paper Equity</h2>
       <div class="balance-row">
-        <div id="balanceVal" class="balance-val">$1000.00</div>
+        <div id="balanceVal" class="balance-val">$36.00</div>
         <div id="updatedAt" class="muted">Connecting...</div>
       </div>
       <p id="stubNote" class="stub-note hidden">STUB SNAPSHOT — this is a placeholder, not a live paper book.</p>
@@ -81,7 +81,15 @@
       <div id="activityList" class="list"></div>
     </section>
 
+    <section class="card" id="linksCard">
+      <h2>FOMO links</h2>
+      <div id="fomoLinks" class="list">
+        <div class="muted">Waiting for a snapshot…</div>
+      </div>
+    </section>
+
     <p class="footer-row">
+      <a id="signupLink" class="fomo-link hidden" target="_blank" rel="noopener noreferrer">New to FOMO?</a>
       <button type="button" id="changeDataUrl" class="linkish">Change data link</button>
     </p>
   </main>
