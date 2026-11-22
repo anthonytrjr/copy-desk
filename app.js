@@ -19,58 +19,123 @@
     {
       name: "watcher",
       label: "Watcher",
-      keys: [
-        "whales_top_n", "min_windows", "min_win_rate", "min_trades_7d",
-        "min_median_hold_min", "max_top_coin_share", "poll_s", "max_lag_s",
-        "min_whale_buy_usd", "ignore_after_mcap_usd"
+      fields: [
+        { key: "whales_top_n", label: "How many top whales to track", type: "number" },
+        { key: "min_windows", label: "Minimum profitable windows", type: "number" },
+        { key: "min_win_rate", label: "Minimum 7-day win rate %", type: "number" },
+        { key: "min_trades_7d", label: "Minimum trades in 7 days", type: "number" },
+        { key: "min_median_hold_min", label: "Minimum median hold (minutes)", type: "number" },
+        { key: "max_top_coin_share", label: "Max share in one coin %", type: "number" },
+        { key: "poll_s", label: "Watcher poll interval (seconds)", type: "number" },
+        { key: "max_lag_s", label: "Max fill lag (seconds)", type: "number" },
+        { key: "min_whale_buy_usd", label: "Minimum whale buy $", type: "number" },
+        { key: "ignore_after_mcap_usd", label: "Ignore coins after this market cap $", type: "number" }
       ]
     },
     {
       name: "vetter",
       label: "Vetter",
-      keys: [
-        "max_dev_pct", "max_top10_pct", "min_lp_locked_pct", "max_bundled",
-        "max_delegated_accounts", "retries", "min_score", "alive_volume_h1",
-        "max_chase_pct", "flow_sell_ratio", "cluster_bonus"
+      fields: [
+        { key: "max_dev_pct", label: "Max dev wallet %", type: "number" },
+        { key: "max_top10_pct", label: "Max top-10 holders %", type: "number" },
+        { key: "min_lp_locked_pct", label: "Min LP locked/burned %", type: "number" },
+        { key: "max_bundled", label: "Max bundled wallets", type: "number" },
+        { key: "max_delegated_accounts", label: "Max delegated accounts", type: "number" },
+        { key: "retries", label: "Audit retries", type: "number" },
+        { key: "min_score", label: "Minimum score to pass (0–100)", type: "number" },
+        { key: "alive_volume_h1", label: "Minimum 1-hour volume $", type: "number" },
+        { key: "max_chase_pct", label: "Vetter chase penalty starts at +% (1h)", type: "number" },
+        { key: "flow_sell_ratio", label: "Max sell/buy flow ratio", type: "number" },
+        { key: "cluster_bonus", label: "Cluster bonus points", type: "number" }
       ]
     },
     {
       name: "social",
       label: "Social",
-      keys: ["social_weight", "social_max_per_h", "social_timeout_s", "shill_cut"]
+      fields: [
+        { key: "social_weight", label: "Social score weight", type: "number" },
+        { key: "social_max_per_h", label: "Max social mentions counted per hour", type: "number" },
+        { key: "social_timeout_s", label: "Social lookup timeout (seconds)", type: "number" },
+        { key: "shill_cut", label: "Shill ring cut (0–1)", type: "number" }
+      ]
     },
     {
       name: "sizer",
       label: "Sizer",
-      keys: [
-        "risk_per_trade_pct", "stop_pct", "one_whale_size", "two_whale_size",
-        "full_whales", "max_pool_pct", "min_ticket_usd", "max_ticket_usd",
-        "max_trades_night", "max_open"
+      fields: [
+        { key: "risk_per_trade_pct", label: "Risk per trade % of cash", type: "number" },
+        { key: "stop_pct", label: "Stop loss % (shared with Guard)", type: "number" },
+        { key: "one_whale_size", label: "Size % when 1 whale buys", type: "number" },
+        { key: "two_whale_size", label: "Size % when 2 whales buy", type: "number" },
+        { key: "full_whales", label: "Whales needed for full size", type: "number" },
+        { key: "max_pool_pct", label: "Max % of the pool", type: "number" },
+        { key: "min_ticket_usd", label: "Minimum ticket $", type: "number" },
+        { key: "max_ticket_usd", label: "Maximum ticket $ (LIVE nights 1–3, then you raise it)", type: "number" },
+        { key: "max_trades_night", label: "Max trades per night", type: "number" },
+        { key: "max_open", label: "Max open positions", type: "number" }
       ]
     },
     {
       name: "executor",
       label: "Executor",
-      keys: [
-        "dip_pct", "dip_window_min", "dip_wait_min", "crash_pct", "tp_x",
-        "tp_sell_pct", "trail_pct", "recheck_liq_drop_pct", "recheck_price_up_pct",
-        "quote_timeout_s", "verify_timeout_s"
+      fields: [
+        { key: "dip_pct", label: "Wait for a dip of this %", type: "number" },
+        { key: "dip_window_min", label: "Dip lookback window (minutes)", type: "number" },
+        { key: "dip_wait_min", label: "Max minutes to wait for the dip", type: "number" },
+        { key: "crash_pct", label: "Abort if it crashes this %", type: "number" },
+        { key: "tp_x", label: "Take-profit multiple (e.g. 2.0x)", type: "number" },
+        { key: "tp_sell_pct", label: "Sell this % at take profit", type: "number" },
+        { key: "trail_pct", label: "Trailing stop %", type: "number" },
+        { key: "recheck_liq_drop_pct", label: "Recheck if liquidity drops this %", type: "number" },
+        { key: "recheck_price_up_pct", label: "Recheck if price has already run this %", type: "number" },
+        { key: "quote_timeout_s", label: "Quote wait timeout (seconds)", type: "number" },
+        { key: "verify_timeout_s", label: "Verify timeout (seconds; Step 12 default 30, Step 9 wrote 38)", type: "number" }
       ]
     },
     {
       name: "guard",
       label: "Guard",
-      keys: [
-        "guard_poll_s", "stop_pct", "timeout_h", "timeout_min_gain_pct",
-        "whale_exit_sell_pct", "whale_exit_min_whales", "night_loss_stop_pct"
+      fields: [
+        { key: "guard_poll_s", label: "Guard poll interval (seconds; spec name poll_s, stored as guard_poll_s so it does not clash with Watcher)", type: "number" },
+        { key: "stop_pct", label: "Stop loss % (shared with Sizer)", type: "number" },
+        { key: "timeout_h", label: "Max hold time (hours)", type: "number" },
+        { key: "timeout_min_gain_pct", label: "Exit at timeout unless gain is at least this %", type: "number" },
+        { key: "whale_exit_sell_pct", label: "Sell this % when the lead whale exits", type: "number" },
+        { key: "whale_exit_min_whales", label: "Whales remaining before a whale-exit sell", type: "number" },
+        { key: "night_loss_stop_pct", label: "Stop the night if book is down this %", type: "number" }
       ]
     },
     {
       name: "desk",
       label: "Desk",
-      keys: ["paper_start_cash", "fee_pct", "hard_chase_pct", "min_market_cap_usd"]
+      fields: [
+        { key: "paper_start_cash", label: "PAPER starting cash $ (does not reset the open book)", type: "number" },
+        { key: "night_start", label: "Night start time", type: "time" },
+        { key: "lock_time", label: "Lock time", type: "time" },
+        { key: "report_time", label: "Morning report time", type: "time" },
+        { key: "notifier", label: "Push channel (telegram or webpush)", type: "select", options: ["telegram", "webpush"] },
+        { key: "fomo_handle", label: "Your FOMO handle", type: "text" },
+        { key: "withdraw_address", label: "Withdraw address (you set this; the desk never presses Confirm)", type: "secret" },
+        { key: "rpc_url", label: "Solana RPC URL", type: "text" },
+        { key: "push_rejects", label: "Also push rejected setups", type: "bool" },
+        { key: "fee_pct", label: "PAPER fee % on large tickets", type: "number" },
+        { key: "require_two_traders", label: "Require 2+ traders (your override)", type: "bool" },
+        { key: "hard_chase_reject", label: "Hard-reject coins already up this much (your override)", type: "bool" },
+        { key: "hard_chase_pct", label: "Hard chase reject threshold % (your 40% floor)", type: "number" },
+        { key: "min_market_cap_usd", label: "Minimum market cap $ (your $15k floor)", type: "number" }
+      ]
     }
   ];
+
+  const FLOAT_STEPS = {
+    fee_pct: "0.01",
+    social_weight: "0.1",
+    shill_cut: "0.1",
+    flow_sell_ratio: "0.1",
+    tp_x: "0.1",
+    timeout_h: "0.25",
+    risk_per_trade_pct: "0.1"
+  };
 
   const state = {
     tab: "home",
@@ -691,21 +756,88 @@
     $("conn-source-label").textContent = activeMode() === "local" ? "Local API (APP_TOKEN)" : "Secret gist snapshot";
 
     const groupsEl = $("settings-groups");
+    const withdrawSet = !!(cfg.withdraw_address || (snap.account && snap.account.withdraw_address_set));
     groupsEl.innerHTML = SETTINGS_GROUPS.map((g) => {
-      const itemsHtml = g.keys.map((key) => {
+      const itemsHtml = (g.fields || []).map((field) => {
+        const key = field.key;
         const val = cfg[key];
         const r = ranges[key] || { min: 0, max: 100 };
-        const step = Number(r.max) <= 5 ? "0.1" : "1";
+        const step = FLOAT_STEPS[key] || (Number(r.max) >= 100000 ? "1000" : Number(r.max) <= 5 ? "0.1" : "1");
+        if (field.type === "number") {
+          return `
+            <div class="setting-item">
+              <div class="setting-top">
+                <div>
+                  <div class="small-text">${esc(field.label)}</div>
+                  <div class="tertiary-text small-text">${esc(key)} · ${esc(r.min)} – ${esc(r.max)}</div>
+                </div>
+                <input class="num-input" type="number" step="${step}" min="${esc(r.min)}" max="${esc(r.max)}" value="${esc(val ?? "")}" data-setting-num="${esc(key)}" ${readOnly ? "disabled" : ""} />
+              </div>
+              <input class="setting-range" type="range" step="${step}" min="${esc(r.min)}" max="${esc(r.max)}" value="${esc(val ?? r.min)}" data-setting-range="${esc(key)}" ${readOnly ? "disabled" : ""} />
+            </div>`;
+        }
+        if (field.type === "time") {
+          return `
+            <div class="setting-item">
+              <div class="setting-top">
+                <div>
+                  <div class="small-text">${esc(field.label)}</div>
+                  <div class="tertiary-text small-text">${esc(key)} · HH:MM</div>
+                </div>
+                <input class="time-input" type="time" value="${esc(val || "")}" data-setting-text="${esc(key)}" ${readOnly ? "disabled" : ""} />
+              </div>
+            </div>`;
+        }
+        if (field.type === "select") {
+          const opts = (field.options || []).map((o) => `<option value="${esc(o)}" ${String(val) === o ? "selected" : ""}>${esc(o)}</option>`).join("");
+          return `
+            <div class="setting-item">
+              <div class="setting-top">
+                <div>
+                  <div class="small-text">${esc(field.label)}</div>
+                  <div class="tertiary-text small-text">${esc(key)}</div>
+                </div>
+                <select class="select-input" data-setting-text="${esc(key)}" ${readOnly ? "disabled" : ""}>${opts}</select>
+              </div>
+            </div>`;
+        }
+        if (field.type === "bool") {
+          const on = val === true || val === "true" || val === 1 || val === "1";
+          return `
+            <div class="setting-item">
+              <div class="setting-top">
+                <div>
+                  <div class="small-text">${esc(field.label)}</div>
+                  <div class="tertiary-text small-text">${esc(key)}</div>
+                </div>
+                <button class="switch ${on ? "on" : ""}" type="button" data-setting-bool="${esc(key)}" data-on="${on ? "1" : "0"}" ${readOnly ? "disabled" : ""} aria-label="${esc(field.label)}">
+                  <span class="switch-knob"></span>
+                </button>
+              </div>
+            </div>`;
+        }
+        if (field.type === "secret") {
+          const shown = readOnly ? (withdrawSet ? "Set" : "Not set") : (val || "");
+          return `
+            <div class="setting-item">
+              <div class="setting-top">
+                <div>
+                  <div class="small-text">${esc(field.label)}</div>
+                  <div class="tertiary-text small-text">${esc(key)}${readOnly ? " · hidden on the phone snapshot" : ""}</div>
+                </div>
+                <input class="text-input" type="${readOnly ? "text" : "password"}" autocomplete="off" value="${esc(shown)}" data-setting-secret="${esc(key)}" ${readOnly ? "disabled" : ""} placeholder="${readOnly ? "" : "Paste address"}" />
+              </div>
+            </div>`;
+        }
         return `
           <div class="setting-item">
             <div class="setting-top">
               <div>
-                <div class="small-text">${esc(key)}</div>
-                <div class="tertiary-text small-text">${esc(r.min)} – ${esc(r.max)}</div>
+                <div class="small-text">${esc(field.label)}</div>
+                <div class="tertiary-text small-text">${esc(key)}</div>
               </div>
-              <input class="num-input" type="number" step="${step}" min="${esc(r.min)}" max="${esc(r.max)}" value="${esc(val ?? "")}" data-setting-num="${esc(key)}" ${readOnly ? "disabled" : ""} />
+              <input class="text-input" type="text" value="${esc(val ?? "")}" data-setting-text="${esc(key)}" ${readOnly ? "disabled" : ""} />
             </div>
-            <input class="setting-range" type="range" step="${step}" min="${esc(r.min)}" max="${esc(r.max)}" value="${esc(val ?? r.min)}" data-setting-range="${esc(key)}" ${readOnly ? "disabled" : ""} />
           </div>`;
       }).join("");
       return `
@@ -1306,7 +1438,28 @@
         const slider = document.querySelector(`[data-setting-range="${CSS.escape(key)}"]`);
         if (slider) slider.value = n.value;
         saveSetting(key, Number(n.value));
+        return;
       }
+      const t = e.target.closest("[data-setting-text]");
+      if (t) {
+        saveSetting(t.dataset.settingText, t.value);
+        return;
+      }
+      const s = e.target.closest("[data-setting-secret]");
+      if (s) {
+        saveSetting(s.dataset.settingSecret, s.value);
+      }
+    });
+
+    document.body.addEventListener("click", (e) => {
+      const sw = e.target.closest("[data-setting-bool]");
+      if (!sw) return;
+      if (sw.disabled) return;
+      e.preventDefault();
+      const next = sw.dataset.on !== "1";
+      sw.dataset.on = next ? "1" : "0";
+      sw.classList.toggle("on", next);
+      saveSetting(sw.dataset.settingBool, next);
     });
   }
 
