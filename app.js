@@ -1,6 +1,8 @@
 (() => {
   const DATA_KEY = "copyDesk.dataUrl";
   const TOKEN_KEY = "copyDesk.appToken";
+  let tradeFilterMode = "all";
+  let tradeFilterState = "all";
   const BOT_COLORS = {
     watcher: "#64d2ff",
     vetter: "#ffd60a",
@@ -402,7 +404,7 @@
     renderLiveScreenMeta(snap);
     renderBotCarousel(st.bots || []);
     renderHomePositions(st.open_positions || []);
-    renderHomeActivity((snap.activity && snap.activity.items) || []);
+    renderHomeActivity(snap);
   }
 
   function renderLiveScreenMeta(snap) {
@@ -588,6 +590,65 @@
     }).join("");
   }
 
+
+  function fmtHold(s) {
+    if (s == null) return "";
+    s = Math.max(0, Math.round(Number(s)));
+    if (s < 60) return s + "s";
+    const m = Math.floor(s / 60), rem = s % 60;
+    if (m < 60) return rem ? `${m}m ${rem}s` : `${m}m`;
+    const h = Math.floor(m / 60), mm = m % 60;
+    return mm ? `${h}h ${mm}m` : `${h}h`;
+  }
+  function fmtTsTrade(ts) {
+    if (!ts) return "—";
+    const n = Number(ts);
+    const d = Number.isFinite(n) && n > 1000000000 ? new Date(n > 1e12 ? n : n * 1000) : new Date(ts);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+  function tradeRowHtml(row) {
+    const mode = (row.mode || "PAPER").toUpperCase();
+    const badge = `<span class="badge ${mode === "REAL" ? "real" : "paper"}">${mode === "REAL" ? "REAL" : "PAPER"}</span>`;
+    const name = row.symbol || shortMint(row.mint) || "coin";
+    const pnl = row.pnl_usd == null ? "" : `${Number(row.pnl_usd) >= 0 ? "+" : "-"}$${Math.abs(Number(row.pnl_usd)).toFixed(2)}` + (row.pnl_pct != null ? ` (${Number(row.pnl_pct) >= 0 ? "+" : ""}${Number(row.pnl_pct).toFixed(0)}%)` : "");
+    const bits = [`buy ${fmtTsTrade(row.buy_at)}`];
+    if (row.buy_price != null) bits[0] += ` @${Number(row.buy_price).toPrecision(4)}`;
+    if (row.state === "closed") {
+      let s = `sell ${fmtTsTrade(row.sell_at)}`;
+      if (row.sell_price != null) s += ` @${Number(row.sell_price).toPrecision(4)}`;
+      bits.push(s);
+    }
+    const held = fmtHold(row.hold_s);
+    if (held) bits.push(`held ${held}`);
+    if (row.exit_reason) bits.push(row.exit_reason);
+    const val = row.state === "open" ? "open" : (pnl || "—");
+    const valClass = (row.state === "closed" && row.pnl_usd != null) ? (Number(row.pnl_usd) >= 0 ? "positive" : "negative") : "";
+    const mint = row.mint || "";
+    return `
+      <div class="ios-row ${mint ? "clickable" : ""}" ${mint ? `data-open-coin="${esc(mint)}"` : ""}>
+        <div class="row-main">
+          <div class="row-title">${badge}${esc(name)} <span class="secondary-text">${esc(row.state || "")}</span></div>
+          <div class="row-sub">${esc(bits.join(" · "))}</div>
+        </div>
+        <div class="row-right">
+          <span class="row-val ${valClass}">${esc(val)}</span>
+          ${isHttpsUrl(row.coin_url) ? `<a class="fomo-chip" href="${esc(row.coin_url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Open on FOMO</a>` : ""}
+        </div>
+      </div>`;
+  }
+  function tradesFromSnap(snap) {
+    const doc = (snap && snap.trades) || {};
+    return doc.items || doc.rows || doc.trades || [];
+  }
+  function filteredTradeItems(items) {
+    return (items || []).filter((row) => {
+      if (tradeFilterMode !== "all" && (row.mode || "PAPER").toUpperCase() !== tradeFilterMode) return false;
+      if (tradeFilterState !== "all" && (row.state || "") !== tradeFilterState) return false;
+      return true;
+    });
+  }
+
   function activityRowHtml(item) {
     const kind = (item.kind || "").toLowerCase();
     const mint = item.mint || item.subtitle;
@@ -612,13 +673,14 @@
       </div>`;
   }
 
-  function renderHomeActivity(items) {
+  function renderHomeActivity(snap) {
     const el = $("home-activity-list");
+    const items = filteredTradeItems(tradesFromSnap(snap));
     if (!items.length) {
-      el.innerHTML = `<div class="empty-box">Waiting for the first copy</div>`;
+      el.innerHTML = `<div class="empty-box">Waiting for the first trade</div>`;
       return;
     }
-    el.innerHTML = items.slice(0, 5).map(activityRowHtml).join("");
+    el.innerHTML = items.slice(0, 5).map(tradeRowHtml).join("");
   }
 
   function renderWhalesTab(snap) {
@@ -713,14 +775,14 @@
   }
 
   function renderActivityTab(snap) {
-    const items = (snap.activity && snap.activity.items) || [];
+    const items = filteredTradeItems(tradesFromSnap(snap));
     $("activity-count-pill").textContent = String(items.length);
     const el = $("activity-full-list");
     if (!items.length) {
-      el.innerHTML = `<div class="empty-box">Nothing yet tonight</div>`;
+      el.innerHTML = `<div class="empty-box">No trades match these filters</div>`;
       return;
     }
-    el.innerHTML = items.map(activityRowHtml).join("");
+    el.innerHTML = items.map(tradeRowHtml).join("");
   }
 
   function renderAccountTab(snap) {
@@ -1192,6 +1254,23 @@
     $("nav-avatar").addEventListener("click", () => switchTab("account"));
     $("home-see-bots").addEventListener("click", () => switchTab("bots"));
     $("home-see-activity").addEventListener("click", () => switchTab("activity"));
+    const tradeFilters = $("trade-filters");
+    if (tradeFilters) {
+      tradeFilters.addEventListener("click", (e) => {
+        const btn = e.target.closest("button.chip");
+        if (!btn) return;
+        if (btn.dataset.filterMode) {
+          tradeFilterMode = btn.dataset.filterMode;
+          tradeFilters.querySelectorAll("[data-filter-mode]").forEach((b) => b.classList.toggle("is-on", b === btn));
+        }
+        if (btn.dataset.filterState) {
+          tradeFilterState = btn.dataset.filterState;
+          tradeFilters.querySelectorAll("[data-filter-state]").forEach((b) => b.classList.toggle("is-on", b === btn));
+        }
+        if (state.snap) renderActivityTab(state.snap);
+        if (state.snap) renderHomeActivity(state.snap);
+      });
+    }
     $("bots-settings-shortcut").addEventListener("click", () => switchTab("account"));
 
     $("nav-search-btn").addEventListener("click", () => {

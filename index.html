@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>FOMO Copy Desk</title>
-  <link rel="manifest" href="./manifest.json?v=10" />
+  <link rel="manifest" href="./manifest.json?v=11" />
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="./app.css?v=10" />
+  <link rel="stylesheet" href="./app.css?v=11" />
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -139,7 +139,7 @@
         <!-- ACTIVITY PREVIEW -->
         <section class="section-block">
           <div class="section-header">
-            <h2 class="section-title">Activity</h2>
+            <h2 class="section-title">Trades</h2>
             <button id="home-see-activity" class="link-btn" type="button">See all</button>
           </div>
           <div id="home-activity-list" class="ios-list"></div>
@@ -167,8 +167,16 @@
       <!-- ACTIVITY TAB -->
       <section id="tab-activity" class="tab-panel hidden">
         <div class="page-head">
-          <h1 class="page-title">Activity</h1>
+          <h1 class="page-title">Trades</h1>
           <span id="activity-count-pill" class="mono-pill">0</span>
+        </div>
+        <div class="filters" id="trade-filters">
+          <button type="button" class="chip is-on" data-filter-mode="all">All modes</button>
+          <button type="button" class="chip" data-filter-mode="PAPER">PAPER</button>
+          <button type="button" class="chip" data-filter-mode="REAL">REAL</button>
+          <button type="button" class="chip is-on" data-filter-state="all">All</button>
+          <button type="button" class="chip" data-filter-state="open">Open</button>
+          <button type="button" class="chip" data-filter-state="closed">Closed</button>
         </div>
         <div id="activity-full-list" class="ios-list"></div>
       </section>
@@ -298,7 +306,7 @@
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
-        <span>Activity</span>
+        <span>Trades</span>
       </button>
       <button class="tab-btn" data-tab="account" type="button">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -433,7 +441,7 @@
 
   <div id="toast" class="toast hidden" role="status"></div>
 
-  <script src="./chart.js?v=10"></script>
-  <script src="./app.js?v=10"></script>
+  <script src="./chart.js?v=11"></script>
+  <script src="./app.js?v=11"></script>
 </body>
 </html>
