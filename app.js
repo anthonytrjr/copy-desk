@@ -344,7 +344,8 @@
     const st = snap.state || {};
     const frameTs = st.screen_frame_ts || (st.browser && st.browser.last_frame_ts) || snap.updated_at;
     const ageS = frameTs ? (Date.now() - Date.parse(frameTs)) / 1000 : 999;
-    const isFresh = Number.isFinite(ageS) && ageS < 5 && activeMode() === "local" && !(snap.screen && snap.screen.stub);
+    const isStub = Boolean((snap.screen && snap.screen.stub) || (st.browser && String(st.browser.status || "").includes("stub")));
+    const isFresh = Number.isFinite(ageS) && ageS < 5 && activeMode() === "local" && !isStub;
 
     const dot = $("live-status-dot");
     const statusTxt = $("live-status-text");
