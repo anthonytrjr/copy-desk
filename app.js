@@ -237,7 +237,12 @@
   }
 
   function getDataUrl() {
-    return localStorage.getItem(DATA_KEY) || "";
+    const fromHash = parseHashParams().data || "";
+    try {
+      return fromHash || localStorage.getItem(DATA_KEY) || "";
+    } catch (e) {
+      return fromHash || "";
+    }
   }
 
   function isLocalHost() {
@@ -313,22 +318,52 @@
     };
   }
 
+  function gistMirrorUrls(url) {
+    const urls = [url];
+    try {
+      const u = new URL(url);
+      if (u.hostname === "gist.githubusercontent.com") {
+        const parts = u.pathname.replace(/^\/+/ , "").split("/");
+        // path is /user/id/raw/...
+        const rest = u.pathname.replace(/^\/+/, "");
+        urls.push("https://gistcdn.githack.com/" + rest + (u.search || ""));
+        urls.push("https://cdn.statically.io/gist/" + rest.replace(/^/, "") + (u.search || ""));
+      }
+    } catch (e) {}
+    return urls;
+  }
+
+  async function fetchCors(url) {
+    const res = await fetch(url, { cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer" });
+    if (!res.ok) throw new Error("Snapshot HTTP " + res.status);
+    return res.json();
+  }
+
   async function loadGistSnapshot() {
     const url = getDataUrl();
-    const res = await fetch(withCacheBust(url));
-    if (!res.ok) throw new Error(`Snapshot HTTP ${res.status}`);
-    const raw = await res.json();
-    if (raw && raw.files && typeof raw.files === "object") {
-      const files = Object.values(raw.files);
-      const jsonFile = files.find((f) => f && /\.json$/i.test(f.filename || "")) || files[0];
-      if (jsonFile && jsonFile.content) return JSON.parse(jsonFile.content);
-      if (jsonFile && jsonFile.raw_url) {
-        const rr = await fetch(withCacheBust(jsonFile.raw_url));
-        if (!rr.ok) throw new Error(`Gist raw HTTP ${rr.status}`);
-        return rr.json();
+    const candidates = gistMirrorUrls(url);
+    let lastErr;
+    for (const cand of candidates) {
+      try {
+        const raw = await fetchCors(cand);
+        if (raw && raw.files && typeof raw.files === "object") {
+          const files = Object.values(raw.files);
+          const jsonFile = files.find((f) => f && /\.json$/i.test(f.filename || "")) || files[0];
+          if (jsonFile && jsonFile.content) return JSON.parse(jsonFile.content);
+          if (jsonFile && jsonFile.raw_url) {
+            const rrCandidates = gistMirrorUrls(jsonFile.raw_url);
+            for (const rc of rrCandidates) {
+              try { return await fetchCors(rc); } catch (e) { lastErr = e; }
+            }
+            throw lastErr || new Error("Gist raw failed");
+          }
+        }
+        return raw;
+      } catch (e) {
+        lastErr = e;
       }
     }
-    return raw;
+    throw lastErr || new Error("Snapshot failed");
   }
 
   function renderOdometer(text) {
