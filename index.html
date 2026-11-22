@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0d1117" />
+  <title>FOMO Copy Desk</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <div class="title">FOMO Copy Desk</div>
+      <span id="modeBadge" class="badge">PAPER MODE</span>
+    </header>
+
+    <section id="setupCard" class="card hidden">
+      <h2>Connect your desk</h2>
+      <p class="muted">Paste the secret data link. It stays on this phone and is never part of the public app code. Anyone who has the link can read the paper dashboard — it is not a login or a lock.</p>
+      <label class="sr-only" for="dataUrlInput">Secret data link</label>
+      <input id="dataUrlInput" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…" />
+      <div class="setup-actions">
+        <button type="button" id="saveDataUrl">Save link</button>
+      </div>
+      <p id="setupError" class="error hidden"></p>
+    </section>
+
+    <section class="card">
+      <h2>Paper Equity</h2>
+      <div class="balance-row">
+        <div id="balanceVal" class="balance-val">$1000.00</div>
+        <div id="updatedAt" class="muted">Connecting...</div>
+      </div>
+      <p id="stubNote" class="stub-note hidden">STUB SNAPSHOT — this is a placeholder, not a live paper book.</p>
+      <canvas id="balanceChart"></canvas>
+    </section>
+
+    <section class="card">
+      <h2>Live Screen (Stub)</h2>
+      <img id="liveScreen" class="screen-img hidden" alt="Live screen stub" />
+      <p id="screenFallback" class="muted">Waiting for a snapshot…</p>
+    </section>
+
+    <section class="card">
+      <h2>Bot Heartbeats</h2>
+      <div id="heartbeats" class="pill-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Open Positions</h2>
+      <div id="positionsList" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Vetted Whales</h2>
+      <div id="whalesList" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Activity</h2>
+      <div id="activityList" class="list"></div>
+    </section>
+
+    <p class="footer-row">
+      <button type="button" id="changeDataUrl" class="linkish">Change data link</button>
+    </p>
+  </main>
+  <script src="chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
