@@ -11,6 +11,10 @@ const stateEl = {
   whales: document.getElementById("whalesList"),
   positions: document.getElementById("positionsList"),
   activity: document.getElementById("activityList"),
+  candidates: document.getElementById("candidatesList"),
+  verdicts: document.getElementById("verdictsList"),
+  alerts: document.getElementById("alertsList"),
+  solBench: document.getElementById("solBench"),
   setupCard: document.getElementById("setupCard"),
   dataUrlInput: document.getElementById("dataUrlInput"),
   saveBtn: document.getElementById("saveDataUrl"),
@@ -212,7 +216,39 @@ function render(snap) {
   const actRows = (snap.activity && snap.activity.items) || [];
   stateEl.activity.innerHTML = actRows.length
     ? actRows.map((a) => `<div class="list-item"><span>${a.title || a.kind}</span><span>${a.value || ""}</span></div>`).join("")
-    : `<div class="muted">No activity yet (Step 4 skeleton).</div>`;
+    : `<div class="muted">No activity yet.</div>`;
+
+  const candRows = snap.candidates || (snap.state && snap.state.candidates) || [];
+  if (stateEl.candidates) {
+    stateEl.candidates.innerHTML = candRows.length
+      ? candRows.map((c) => `<div class="list-item"><span>${(c.mint || "").slice(0, 8)}… · ${c.trader_count || 0} traders</span><span>${c.buy_count || 0} buys</span></div>`).join("")
+      : `<div class="muted">No candidates yet. Watcher waits for the browser lane (Step 9) or a labeled fixture feed.</div>`;
+  }
+  const verdicts = snap.verdicts || (snap.state && snap.state.verdicts) || [];
+  if (stateEl.verdicts) {
+    stateEl.verdicts.innerHTML = verdicts.length
+      ? verdicts.map((v) => {
+          const audits = (v.audits || []).map((a) => `${a.pass ? "✓" : "✗"} ${a.name}`).join(" · ");
+          return `<div class="list-item"><span>${v.pass ? "PASS" : "FAIL"} · ${(v.mint || "").slice(0, 8)}… · ${v.reason || ""}</span><span>${audits}</span></div>`;
+        }).join("")
+      : `<div class="muted">No Vetter verdicts yet.</div>`;
+  }
+  const alerts = snap.alerts || (snap.state && snap.state.alerts) || [];
+  if (stateEl.alerts) {
+    stateEl.alerts.innerHTML = alerts.length
+      ? alerts.map((a) => `<div class="list-item"><span>${a.level || "info"} · ${a.title || ""}</span><span>${a.reason || ""}</span></div>`).join("")
+      : `<div class="muted">No Guard alerts.</div>`;
+  }
+  const sol = snap.sol_benchmark || (snap.state && snap.state.sol_benchmark) || {};
+  if (stateEl.solBench) {
+    if (sol.available) {
+      const vs = Number(sol.vs_sol_usd || 0);
+      const sign = vs >= 0 ? "+" : "";
+      stateEl.solBench.textContent = `Paper $${Number(sol.paper_equity_usd || 0).toFixed(2)} vs holding SOL $${Number(sol.sol_hold_usd || 0).toFixed(2)} (${sign}${vs.toFixed(2)})`;
+    } else {
+      stateEl.solBench.textContent = "P&L vs holding SOL: waiting for a SOL price (not invented).";
+    }
+  }
 }
 
 async function refresh() {
