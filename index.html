@@ -189,6 +189,10 @@
             </div>
           </div>
           <div class="kv-row">
+            <span class="secondary-text">LIVE gate</span>
+            <span id="account-gate-summary" class="tertiary-text small-text">Checking…</span>
+          </div>
+          <div class="kv-row">
             <span class="secondary-text">Cash</span>
             <span id="account-cash" class="tabular-strong">$36.00</span>
           </div>
@@ -399,7 +403,8 @@
         <div class="sheet-title">Switch to LIVE</div>
         <span></span>
       </div>
-      <p class="secondary-text">Type <strong>LIVE</strong> to test switching mode. In Step 10, live trading stays locked off until Step 13.</p>
+      <p class="secondary-text">Step 13 LIVE gate: all checks below must pass before typing <strong>LIVE</strong> enables real trades.</p>
+      <div id="live-gate-list" class="ios-list" style="margin:8px 0;"></div>
       <input id="live-confirm-input" class="text-input" type="text" placeholder="Type LIVE" autocomplete="off" />
       <p id="live-refusal-msg" class="red-text small-text hidden"></p>
       <button id="live-submit-btn" class="danger-btn full" type="button">Confirm LIVE</button>

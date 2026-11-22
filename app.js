@@ -730,6 +730,12 @@
     $("mode-paper-btn").classList.toggle("active", mode !== "LIVE");
     $("mode-live-btn").classList.toggle("active", mode === "LIVE");
     $("account-cash").textContent = fmtMoney(acc.cash ?? st.paper_cash_usd ?? st.balance_usd ?? 36);
+    const gate = snap.live_gate || acc.live_gate || {};
+    const gateReasons = gate.reasons || [];
+    $("account-gate-summary").textContent = gate.ready
+      ? "Gate ready · type LIVE to flip"
+      : `Locked (${gateReasons.length}): ${gateReasons[0] || "gate not met"}`;
+    $("account-gate-summary").className = gate.ready ? "green-text small-text" : "tertiary-text small-text";
 
     const profEl = $("account-profile-link");
     if (isHttpsUrl(acc.fomo_profile_url || snap.fomo_profile_url)) {
@@ -1249,7 +1255,24 @@
       refreshAll();
     });
 
+    function renderLiveGateModal() {
+      const gate = (state.snap && (state.snap.live_gate || (state.snap.account && state.snap.account.live_gate))) || {};
+      const checks = gate.checks || {};
+      const rows = [
+        ["full_paper_night", "At least 1 full PAPER night in db"],
+        ["step15_passed", "Step 15 acceptance (11 checks) passed"],
+        ["fomo_quote_loaded_verified", "FOMO Buy quote_loaded verified"],
+        ["fomo_done_after_trade_verified", "FOMO done_after_trade verified"],
+        ["whales_approved", "Vetted whales approved by you"],
+        ["live_ticket_cap_ok", "First 3 LIVE nights max_ticket_usd <= $50"],
+      ];
+      $("live-gate-list").innerHTML = rows.map(([k, label]) => {
+        const ok = !!checks[k];
+        return `<div class="ios-row"><span class="small-text">${esc(label)}</span><span class="small-text ${ok ? "green-text" : "red-text"}">${ok ? "Pass" : "Locked"}</span></div>`;
+      }).join("");
+    }
     $("mode-live-btn").addEventListener("click", () => {
+      renderLiveGateModal();
       $("live-confirm-input").value = "";
       $("live-refusal-msg").classList.add("hidden");
       $("live-modal").classList.remove("hidden");
@@ -1268,10 +1291,16 @@
       }
       const res = await apiFetch("/api/mode", {
         method: "POST",
-        body: JSON.stringify({ mode: "LIVE", confirm: "LIVE" })
+        body: JSON.stringify({ mode: "LIVE", confirm: "LIVE", from_account: true })
       });
       const data = await res.json().catch(() => ({}));
-      $("live-refusal-msg").textContent = data.message || "LIVE stays off until Step 13.";
+      if (res.ok && data.ok && data.mode === "LIVE") {
+        $("live-modal").classList.add("hidden");
+        showToast("Switched to LIVE");
+        refreshAll();
+        return;
+      }
+      $("live-refusal-msg").textContent = data.message || "gate not met";
       $("live-refusal-msg").classList.remove("hidden");
     });
 
