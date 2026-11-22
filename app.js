@@ -675,10 +675,10 @@
     }
 
     const push = acc.push || {};
-    const pushTxt = push.connected
-      ? "Connected"
-      : `Not connected · ${push.note || "Telegram only (Step 11)"}`;
-    $("push-status-text").textContent = pushTxt;
+    const bits = [];
+    bits.push(push.telegram_connected ? "Telegram connected" : (push.telegram_token_set ? "Telegram: tap /start in bot" : "Telegram: waiting for token"));
+    if (push.webpush_subs > 0) bits.push(`Web push (${push.webpush_subs})`);
+    $("push-status-text").textContent = bits.join(" · ");
 
     const settingsDoc = snap.settings || {};
     const cfg = settingsDoc.settings || {};
@@ -1165,27 +1165,60 @@
       }
     });
 
+    function urlB64ToUint8Array(base64String) {
+      const pad = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const b64 = (base64String + pad).replace(/-/g, "+").replace(/_/g, "/");
+      const raw = atob(b64);
+      const out = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+      return out;
+    }
+
     $("enable-push-btn").addEventListener("click", async () => {
       if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-        showToast("Telegram only (Step 11) in this browser");
+        showToast("Telegram pushes active once bot token + /start are set");
         return;
       }
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
-        showToast("Notifications denied — using Telegram (Step 11)");
+        showToast("Browser notifications denied — Telegram will still push");
         return;
       }
-      showToast("Allowed on device · VAPID activates in Step 11");
+      if (activeMode() !== "local") {
+        showToast("Allowed on device · subscribe via local desk or use Telegram");
+        return;
+      }
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const vRes = await apiFetch("/api/push/vapid");
+        const vData = await vRes.json().catch(() => ({}));
+        if (!vRes.ok || !vData.public_key || !reg.pushManager) {
+          showToast("Push manager unavailable here — Telegram pushes active");
+          return;
+        }
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlB64ToUint8Array(vData.public_key)
+        });
+        const saveRes = await apiFetch("/api/push", {
+          method: "POST",
+          body: JSON.stringify({ subscription: sub.toJSON() })
+        });
+        showToast(saveRes.ok ? "Web push enabled" : "Could not save push subscription");
+        refreshAll();
+      } catch {
+        showToast("Home-screen PWA required for Web Push — Telegram active");
+      }
     });
 
     $("test-push-btn").addEventListener("click", async () => {
       if (activeMode() !== "local") {
-        showToast("Test push stubbed until Step 11 (Telegram)");
+        showToast("Test push runs from local desk or Telegram");
         return;
       }
       const res = await apiFetch("/api/push/test", { method: "POST" });
       const data = await res.json().catch(() => ({}));
-      showToast(data.message || "Test push stubbed");
+      showToast(data.message || "Test push checked");
     });
 
     $("copy-picks-freq").addEventListener("change", (e) => saveSetting("copy_picks_freq", e.target.value));
