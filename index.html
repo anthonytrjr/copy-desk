@@ -3,97 +3,424 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0d1117" />
   <title>FOMO Copy Desk</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="app.css" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./app.css" />
 </head>
 <body>
-  <main class="wrap">
-    <header class="topbar">
-      <div class="title">FOMO Copy Desk</div>
-      <span id="modeBadge" class="badge">PAPER MODE</span>
+  <div id="app" class="app-shell">
+    <!-- Top iOS Navbar -->
+    <header class="navbar">
+      <button id="nav-avatar" class="nav-avatar" type="button" aria-label="Account">
+        <span>GB</span>
+      </button>
+      <div class="nav-title">Grok Bot</div>
+      <div class="nav-actions">
+        <button id="nav-search-btn" class="icon-btn" type="button" aria-label="Search">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+          </svg>
+        </button>
+        <button id="nav-bell-btn" class="icon-btn" type="button" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span id="bell-dot" class="bell-dot hidden"></span>
+        </button>
+      </div>
     </header>
 
-    <section id="setupCard" class="card hidden">
-      <h2>Connect your desk</h2>
-      <p class="muted">Paste the secret data link. It stays on this phone and is never part of the public app code. Anyone who has the link can read the paper dashboard — it is not a login or a lock.</p>
-      <label class="sr-only" for="dataUrlInput">Secret data link</label>
-      <input id="dataUrlInput" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…" />
-      <div class="setup-actions">
-        <button type="button" id="saveDataUrl">Save link</button>
+    <!-- Search Bar -->
+    <div id="search-drawer" class="search-drawer hidden">
+      <div class="search-field-wrap">
+        <input id="search-input" class="search-input" type="search" placeholder="Search name, symbol, mint or whale" autocomplete="off" />
+        <button id="search-clear" class="search-clear" type="button">Cancel</button>
       </div>
-      <p id="setupError" class="error hidden"></p>
-    </section>
+      <div id="search-results" class="search-results"></div>
+    </div>
 
-    <section class="card">
-      <h2>Paper Equity</h2>
-      <div class="balance-row">
-        <div id="balanceVal" class="balance-val">$36.00</div>
-        <div id="updatedAt" class="muted">Connecting...</div>
-      </div>
-      <p id="stubNote" class="stub-note hidden">STUB SNAPSHOT — this is a placeholder, not a live paper book.</p>
-      <canvas id="balanceChart"></canvas>
-      <div id="solBench" class="muted">P&amp;L vs holding SOL: waiting…</div>
-    </section>
+    <!-- Error Banner -->
+    <div id="error-banner" class="error-banner hidden" role="status"></div>
 
-    <section class="card">
-      <h2>Live Screen (Stub)</h2>
-      <img id="liveScreen" class="screen-img hidden" alt="Live screen stub" />
-      <p id="screenFallback" class="muted">Waiting for a snapshot…</p>
-    </section>
-
-    <section class="card">
-      <h2>Bot Heartbeats</h2>
-      <div id="heartbeats" class="pill-list"></div>
-    </section>
-
-    <section class="card">
-      <h2>Open Positions</h2>
-      <div id="positionsList" class="list"></div>
-    </section>
-
-    <section class="card">
-      <h2>Candidates</h2>
-      <div id="candidatesList" class="list"></div>
-    </section>
-
-    <section class="card">
-      <h2>Vetter Verdicts</h2>
-      <div id="verdictsList" class="list"></div>
-    </section>
-
-    <section class="card">
-      <h2>Guard Alerts</h2>
-      <div id="alertsList" class="list"></div>
-    </section>
-
-    <section class="card">
-      <h2>Vetted Whales</h2>
-      <div id="whalesList" class="list"></div>
-    </section>
-
-    <section class="card">
-      <h2>Activity</h2>
-      <div id="activityList" class="list"></div>
-    </section>
-
-    <section class="card" id="linksCard">
-      <h2>FOMO links</h2>
-      <div id="fomoLinks" class="list">
-        <div class="muted">Waiting for a snapshot…</div>
+    <!-- Setup Panel (if neither local token nor gist URL configured) -->
+    <section id="setup-panel" class="setup-panel hidden">
+      <div class="card">
+        <h2 class="card-title">Connect your desk</h2>
+        <p class="secondary-text">Paste your secret snapshot link or local desk token to load live data.</p>
+        <div class="setup-row">
+          <input id="setup-input" class="text-input" type="password" placeholder="Secret gist raw URL or APP_TOKEN" autocomplete="off" />
+          <button id="setup-save" class="primary-btn" type="button">Connect</button>
+        </div>
       </div>
     </section>
 
-    <p class="footer-row">
-      <a id="signupLink" class="fomo-link hidden" target="_blank" rel="noopener noreferrer">New to FOMO?</a>
-      <button type="button" id="changeDataUrl" class="linkish">Change data link</button>
-    </p>
-  </main>
-  <script src="chart.js"></script>
-  <script src="app.js"></script>
+    <main id="main-content" class="main-content">
+      <!-- Loading Skeleton -->
+      <section id="loading-view" class="tab-panel">
+        <div class="skeleton skel-balance"></div>
+        <div class="skeleton skel-chart"></div>
+        <div class="skeleton skel-screen"></div>
+        <div class="skeleton skel-row"></div>
+        <div class="skeleton skel-row"></div>
+      </section>
+
+      <!-- HOME TAB -->
+      <section id="tab-home" class="tab-panel hidden">
+        <div class="balance-header">
+          <div class="balance-line">
+            <div id="balance-odometer" class="balance-odometer" aria-label="Paper balance">$36.00</div>
+            <span id="home-paper-pill" class="paper-pill">PAPER</span>
+          </div>
+          <div class="balance-sub">
+            <span id="today-pct" class="today-pct positive">+0.00%</span>
+            <span class="secondary-text">today</span>
+            <span id="multiplier-pill" class="multiplier-pill">1.00x</span>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <canvas id="balance-chart" class="balance-chart"></canvas>
+          <div id="chart-empty-hint" class="chart-empty-hint hidden">Waiting for the first copy</div>
+        </div>
+
+        <div class="range-switch" role="tablist" aria-label="Chart range">
+          <button class="range-btn active" data-range="LIVE" type="button">LIVE</button>
+          <button class="range-btn" data-range="1H" type="button">1H</button>
+          <button class="range-btn" data-range="4H" type="button">4H</button>
+          <button class="range-btn" data-range="1D" type="button">1D</button>
+          <button class="range-btn" data-range="1M" type="button">1M</button>
+          <button class="range-btn" data-range="ALL" type="button">ALL</button>
+        </div>
+
+        <!-- LIVE SCREEN CARD -->
+        <section class="live-screen-section">
+          <div id="live-screen-card" class="live-screen-card" role="button" tabindex="0" aria-label="Open Live Screen">
+            <div class="live-screen-media">
+              <img id="live-screen-img" class="live-screen-img" alt="Bot browser preview" />
+              <div id="live-screen-fallback" class="live-screen-fallback hidden"></div>
+              <div class="live-screen-overlay-top">
+                <span id="live-status-chip" class="status-chip">
+                  <span id="live-status-dot" class="status-dot grey"></span>
+                  <span id="live-status-text">Last frame --</span>
+                </span>
+                <span id="lane-holder-chip" class="lane-chip">Idle</span>
+              </div>
+            </div>
+            <div id="last-order-bar" class="last-order-bar">
+              <span id="last-order-text" class="secondary-text">No orders yet</span>
+              <span id="last-order-checks" class="order-checks"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- BOTS CAROUSEL -->
+        <section class="section-block">
+          <div class="section-header">
+            <h2 id="home-bots-title" class="section-title">Bots · 5 running</h2>
+            <button id="home-see-bots" class="link-btn" type="button">Details</button>
+          </div>
+          <div id="bots-carousel" class="bots-carousel"></div>
+        </section>
+
+        <!-- OPEN POSITIONS (if any) -->
+        <section id="home-positions-block" class="section-block hidden">
+          <div class="section-header">
+            <h2 class="section-title">Open positions</h2>
+          </div>
+          <div id="home-positions-list" class="ios-list"></div>
+        </section>
+
+        <!-- ACTIVITY PREVIEW -->
+        <section class="section-block">
+          <div class="section-header">
+            <h2 class="section-title">Activity</h2>
+            <button id="home-see-activity" class="link-btn" type="button">See all</button>
+          </div>
+          <div id="home-activity-list" class="ios-list"></div>
+        </section>
+      </section>
+
+      <!-- WHALES TAB -->
+      <section id="tab-whales" class="tab-panel hidden">
+        <div class="page-head">
+          <h1 class="page-title">Whales</h1>
+          <span id="whales-count-pill" class="mono-pill">0 online</span>
+        </div>
+        <div id="whales-list" class="ios-list"></div>
+      </section>
+
+      <!-- BOTS TAB -->
+      <section id="tab-bots" class="tab-panel hidden">
+        <div class="page-head">
+          <h1 class="page-title">Bots</h1>
+          <button id="bots-settings-shortcut" class="link-btn" type="button">Settings</button>
+        </div>
+        <div id="bots-full-list" class="stack-list"></div>
+      </section>
+
+      <!-- ACTIVITY TAB -->
+      <section id="tab-activity" class="tab-panel hidden">
+        <div class="page-head">
+          <h1 class="page-title">Activity</h1>
+          <span id="activity-count-pill" class="mono-pill">0</span>
+        </div>
+        <div id="activity-full-list" class="ios-list"></div>
+      </section>
+
+      <!-- ACCOUNT TAB -->
+      <section id="tab-account" class="tab-panel hidden">
+        <div class="page-head">
+          <h1 class="page-title">Account</h1>
+          <span id="account-mode-pill" class="paper-pill">PAPER</span>
+        </div>
+
+        <div class="card account-summary-card">
+          <div class="kv-row">
+            <span class="secondary-text">Mode</span>
+            <div class="mode-toggle" role="group" aria-label="Trading mode">
+              <button id="mode-paper-btn" class="seg-btn active" type="button">PAPER</button>
+              <button id="mode-live-btn" class="seg-btn" type="button">LIVE</button>
+            </div>
+          </div>
+          <div class="kv-row">
+            <span class="secondary-text">Cash</span>
+            <span id="account-cash" class="tabular-strong">$36.00</span>
+          </div>
+          <div class="kv-row">
+            <span class="secondary-text">Your FOMO profile</span>
+            <span id="account-profile-link" class="secondary-text">Not set</span>
+          </div>
+          <div class="kv-row">
+            <span class="secondary-text">Invite a friend</span>
+            <button id="invite-friend-btn" class="pill-btn" type="button">Share link</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Watch &amp; Alerts</h2>
+          <div class="kv-row">
+            <div>
+              <div>Watch in Grok Bot</div>
+              <div class="tertiary-text small-text">Open the bot's browser preview</div>
+            </div>
+            <button id="watch-grok-btn" class="pill-btn" type="button">Open</button>
+          </div>
+          <div class="kv-row">
+            <div>
+              <div>Web &amp; Telegram pushes</div>
+              <div id="push-status-text" class="tertiary-text small-text">Not connected · Plan B Telegram (Step 11)</div>
+            </div>
+            <div class="row-btns">
+              <button id="enable-push-btn" class="pill-btn" type="button">Enable</button>
+              <button id="test-push-btn" class="pill-btn secondary" type="button">Test push</button>
+            </div>
+          </div>
+          <div class="kv-row">
+            <div>
+              <div>Copy picks</div>
+              <div class="tertiary-text small-text">Chapter 3 prompt schedule</div>
+            </div>
+            <div class="row-btns">
+              <select id="copy-picks-freq" class="select-input">
+                <option value="off">Off</option>
+                <option value="24h">Every 24h</option>
+                <option value="12h">Every 12h</option>
+                <option value="6h">Every 6h</option>
+              </select>
+              <input id="copy-picks-time" class="time-input" type="time" value="08:00" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head-row">
+            <h2 class="card-title">Step 12 Settings</h2>
+            <span id="settings-mode-note" class="tertiary-text small-text">Read-only via gist</span>
+          </div>
+          <div id="settings-groups" class="settings-groups"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Desk connection</h2>
+          <div class="kv-row">
+            <span id="conn-source-label" class="secondary-text">Gist snapshot</span>
+            <button id="change-link-btn" class="pill-btn secondary" type="button">Change link</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Blurred Tab Bar -->
+    <nav class="tab-bar" aria-label="Main navigation">
+      <button class="tab-btn active" data-tab="home" type="button">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>
+        </svg>
+        <span>Home</span>
+      </button>
+      <button class="tab-btn" data-tab="whales" type="button">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span>Whales</span>
+      </button>
+      <button class="tab-btn" data-tab="bots" type="button">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="8" width="18" height="12" rx="3"/>
+          <path d="M12 2v6"/>
+          <circle cx="9" cy="14" r="1.5"/>
+          <circle cx="15" cy="14" r="1.5"/>
+        </svg>
+        <span>Bots</span>
+      </button>
+      <button class="tab-btn" data-tab="activity" type="button">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>Activity</span>
+      </button>
+      <button class="tab-btn" data-tab="account" type="button">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21a8 8 0 0 1 16 0"/>
+        </svg>
+        <span>Account</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- COIN SCREEN MODAL -->
+  <div id="coin-modal" class="sheet-modal hidden" role="dialog" aria-modal="true">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <button id="coin-close" class="icon-btn" type="button" aria-label="Close">✕</button>
+        <div class="sheet-title-wrap">
+          <span id="coin-title" class="sheet-title">Token</span>
+          <span id="coin-paper-pill" class="paper-pill">PAPER</span>
+        </div>
+        <button id="coin-shield-btn" class="mono-pill shield-pill" type="button">0/8</button>
+      </div>
+      <div id="coin-subtitle" class="secondary-text coin-subtitle">-- · Solana</div>
+      <div class="coin-price-row">
+        <div id="coin-price" class="coin-price">--</div>
+        <div id="coin-delta" class="coin-delta">--</div>
+      </div>
+      <div class="coin-chart-wrap">
+        <canvas id="coin-chart" class="coin-chart"></canvas>
+        <div id="coin-chart-empty" class="chart-empty-hint hidden">Waiting for 1m price history</div>
+      </div>
+      <div class="coin-stats-grid">
+        <div class="stat-box"><span class="secondary-text">Market cap</span><strong id="coin-mcap">--</strong></div>
+        <div class="stat-box"><span class="secondary-text">Liquidity</span><strong id="coin-liq">--</strong></div>
+        <div class="stat-box"><span class="secondary-text">Holders</span><strong id="coin-holders">--</strong></div>
+      </div>
+      <div id="coin-position-card" class="card hidden"></div>
+      <div class="coin-actions">
+        <a id="coin-fomo-btn" class="primary-btn" target="_blank" rel="noopener noreferrer">Open on FOMO</a>
+        <button id="coin-sell-btn" class="danger-btn hidden" type="button">Sell now</button>
+      </div>
+      <div id="sell-sheet" class="sell-sheet hidden">
+        <div class="sell-pcts">
+          <button class="pct-btn" data-pct="25" type="button">25%</button>
+          <button class="pct-btn" data-pct="50" type="button">50%</button>
+          <button class="pct-btn active" data-pct="100" type="button">100%</button>
+        </div>
+        <button id="confirm-sell-btn" class="danger-btn full" type="button">Confirm sell 100%</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT SCREEN MODAL -->
+  <div id="audit-modal" class="sheet-modal hidden" role="dialog" aria-modal="true">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <button id="audit-close" class="icon-btn" type="button" aria-label="Close">✕</button>
+        <div id="audit-title" class="sheet-title">8-Layer Audit</div>
+        <a id="audit-fomo-link" class="link-btn" target="_blank" rel="noopener noreferrer">Open on FOMO</a>
+      </div>
+      <div class="audit-discs-wrap">
+        <div class="cyan-beam"></div>
+        <div id="audit-discs" class="audit-discs"></div>
+      </div>
+      <div id="audit-layers-list" class="ios-list"></div>
+      <div class="card audit-meta-card">
+        <div id="audit-whales-row" class="kv-row"></div>
+        <div id="audit-social-row" class="kv-row"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHALE DETAIL MODAL -->
+  <div id="whale-modal" class="sheet-modal hidden" role="dialog" aria-modal="true">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <button id="whale-close" class="icon-btn" type="button" aria-label="Close">✕</button>
+        <div id="whale-modal-title" class="sheet-title">@whale</div>
+        <a id="whale-profile-link" class="link-btn" target="_blank" rel="noopener noreferrer">Profile</a>
+      </div>
+      <div id="whale-fills-list" class="ios-list"></div>
+    </div>
+  </div>
+
+  <!-- LIVE SCREEN FULLSCREEN MODAL -->
+  <div id="screen-modal" class="screen-modal hidden" role="dialog" aria-modal="true">
+    <div class="screen-modal-bar">
+      <button id="screen-close" class="icon-btn" type="button" aria-label="Close">✕</button>
+      <span id="screen-modal-status" class="status-chip"></span>
+      <span id="screen-modal-lane" class="lane-chip">Idle</span>
+    </div>
+    <div id="screen-zoom-stage" class="screen-zoom-stage">
+      <img id="screen-modal-img" class="screen-modal-img" alt="Bot screen fullscreen" />
+    </div>
+    <div class="screen-modal-foot">
+      <div class="zoom-controls">
+        <button id="zoom-out-btn" class="pill-btn secondary" type="button">-</button>
+        <button id="zoom-reset-btn" class="pill-btn secondary" type="button">1x</button>
+        <button id="zoom-in-btn" class="pill-btn secondary" type="button">+</button>
+      </div>
+      <a id="screen-fomo-btn" class="primary-btn hidden" target="_blank" rel="noopener noreferrer">Open on FOMO</a>
+    </div>
+  </div>
+
+  <!-- LIVE MODE REFUSAL / CONFIRM MODAL -->
+  <div id="live-modal" class="sheet-modal hidden" role="dialog" aria-modal="true">
+    <div class="sheet-panel compact">
+      <div class="sheet-header">
+        <button id="live-close" class="icon-btn" type="button" aria-label="Close">✕</button>
+        <div class="sheet-title">Switch to LIVE</div>
+        <span></span>
+      </div>
+      <p class="secondary-text">Type <strong>LIVE</strong> to test switching mode. In Step 10, live trading stays locked off until Step 13.</p>
+      <input id="live-confirm-input" class="text-input" type="text" placeholder="Type LIVE" autocomplete="off" />
+      <p id="live-refusal-msg" class="red-text small-text hidden"></p>
+      <button id="live-submit-btn" class="danger-btn full" type="button">Confirm LIVE</button>
+    </div>
+  </div>
+
+  <!-- ALERTS MODAL -->
+  <div id="alerts-modal" class="sheet-modal hidden" role="dialog" aria-modal="true">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <button id="alerts-close" class="icon-btn" type="button" aria-label="Close">✕</button>
+        <div class="sheet-title">Alerts</div>
+        <span></span>
+      </div>
+      <div id="alerts-list" class="ios-list"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="./chart.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
