@@ -1004,6 +1004,13 @@ html, body {
   justify-content: center;
 }
 
+.sheet-modal.hidden,
+.sheet-modal[hidden],
+.sell-sheet.hidden,
+.sell-sheet[hidden] {
+  display: none !important;
+}
+
 .sheet-panel {
   width: 100%;
   max-width: 520px;
