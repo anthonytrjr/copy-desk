@@ -224,9 +224,9 @@
     const token = params.get("t") || params.get("token");
     if (data) localStorage.setItem(DATA_KEY, data);
     if (token) localStorage.setItem(TOKEN_KEY, token);
-    if (data || token) {
-      history.replaceState(null, "", window.location.pathname + window.location.search);
-    }
+    // Keep #d= / #data= and #t= in the address bar so Add to Home Screen
+    // saves the full link. The fragment is never sent to a server.
+    // localStorage remains the fallback when the fragment is absent.
     return { data, token };
   }
 
