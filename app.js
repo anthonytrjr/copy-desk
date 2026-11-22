@@ -761,6 +761,32 @@
     $("settings-mode-note").textContent = readOnly ? "Read-only via gist" : "Saved live to desk";
     $("conn-source-label").textContent = activeMode() === "local" ? "Local API (APP_TOKEN)" : "Secret gist snapshot";
 
+    const pendingSuggestions = settingsDoc.pending_suggestions || acc.pending_suggestions || cfg.pending_suggestions || [];
+    $("suggestions-count-pill").textContent = String(pendingSuggestions.length);
+    const sugEl = $("pending-suggestions-list");
+    if (!pendingSuggestions.length) {
+      sugEl.innerHTML = `<div class="empty-box">No pending suggestions</div>`;
+    } else {
+      sugEl.innerHTML = pendingSuggestions.map((s) => {
+        const valLine = s.kind === "mute_whale"
+          ? `Mute @${esc(s.handle || s.whale_id)}`
+          : `${esc(s.key)}: ${esc(s.current_value)} → ${esc(s.suggested_value)}`;
+        return `
+          <div class="setting-item">
+            <div class="setting-top">
+              <div>
+                <div class="small-text">${esc(s.label || valLine)}</div>
+                <div class="tertiary-text small-text">${esc(valLine)} · ${esc(s.reason || "")}</div>
+              </div>
+              <div class="row-btns">
+                <button class="pill-btn" type="button" data-approve-suggestion="${esc(s.id)}" ${readOnly ? "disabled" : ""}>Approve</button>
+                <button class="pill-btn secondary" type="button" data-dismiss-suggestion="${esc(s.id)}" ${readOnly ? "disabled" : ""}>Dismiss</button>
+              </div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
     const groupsEl = $("settings-groups");
     const withdrawSet = !!(cfg.withdraw_address || (snap.account && snap.account.withdraw_address_set));
     groupsEl.innerHTML = SETTINGS_GROUPS.map((g) => {
@@ -1412,6 +1438,31 @@
       const auditTarget = e.target.closest("[data-open-audit]");
       if (auditTarget) {
         openAuditModal(auditTarget.dataset.openAudit);
+        return;
+      }
+      const approveSug = e.target.closest("[data-approve-suggestion]");
+      if (approveSug) {
+        if (activeMode() !== "local") {
+          showToast("Read-only via gist");
+          return;
+        }
+        const sid = approveSug.dataset.approveSuggestion;
+        const res = await apiFetch(`/api/suggestions/${encodeURIComponent(sid)}/approve`, { method: "POST" });
+        const data = await res.json().catch(() => ({}));
+        showToast(res.ok ? "Suggestion approved (who=me)" : (data.error || "Could not approve"));
+        refreshAll();
+        return;
+      }
+      const dismissSug = e.target.closest("[data-dismiss-suggestion]");
+      if (dismissSug) {
+        if (activeMode() !== "local") {
+          showToast("Read-only via gist");
+          return;
+        }
+        const sid = dismissSug.dataset.dismissSuggestion;
+        const res = await apiFetch(`/api/suggestions/${encodeURIComponent(sid)}/dismiss`, { method: "POST" });
+        showToast(res.ok ? "Suggestion dismissed" : "Could not dismiss");
+        refreshAll();
         return;
       }
       const whaleTarget = e.target.closest("[data-open-whale]");
