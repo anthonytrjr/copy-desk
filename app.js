@@ -221,9 +221,11 @@ async function refresh() {
     if (dataUrl) {
       showSetup(false);
       showError("");
+      // Simple GET only: raw gist OPTIONS preflight returns 403.
+      // A cache-busting query helps the browser cache; GitHub's raw CDN may still lag.
       const fetchUrl = new URL(dataUrl);
       fetchUrl.searchParams.set("_t", String(Date.now()));
-      const res = await fetch(fetchUrl.toString(), { cache: "no-store" });
+      const res = await fetch(fetchUrl.toString());
       if (!res.ok) throw new Error(`Snapshot HTTP ${res.status}`);
       render(normalize(await parseSnapshot(res)));
       return;
